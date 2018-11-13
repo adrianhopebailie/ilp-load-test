@@ -1,9 +1,9 @@
 import * as fs from 'fs'
 import * as commander from 'commander'
-import { createSuccessfulMessageExchange, createFailedMessageExchange, createAuthExchange, createUserAndToken } from '../lib/generators'
+import { createUserAndToken } from '../lib/generators'
 import { render as renderHeader } from '../templates/header'
-import { render as renderAuth } from '../templates/auth'
-import { render as renderPrepare } from '../templates/prepare'
+import { render as renderSend } from '../templates/send'
+import { render as renderReceive } from '../templates/receive'
 import { render as renderFooter } from '../templates/footer'
 import { render as renderConfig } from '../templates/connector'
 
@@ -24,7 +24,7 @@ const UNIQUE_USERS = Number(commander.users)
 const MESSAGES = Number(commander.messages)
 const TEST_FILE = './ilp-load-test.jmx'
 const CONFIG_FILE = './connector-config.json'
-const DATA_FILE = './user.csv'
+const DATA_FILE = './users.csv'
 
 // Need some field sizes to be constant so we can do variable substitution without breaking the OER encoding
 const USERNAME_SIZE = 10
@@ -40,8 +40,9 @@ const users = []
 for (let i = 1; i <= UNIQUE_USERS; i++) {
   const [account, token] = createUserAndToken(i, USERNAME_SIZE, TOKEN_SIZE)
   const port = (PORT === 7768) ? PORT : PORT + i
-  dataFile.write(`${account},${Buffer.from(account, 'utf8').toString('hex')},${Buffer.from(token, 'utf8').toString('hex')}, ${port}\n`)
-  users.push({ account, token, port })
+  const server = SERVER // COULD vary this later
+  dataFile.write(`${account},${token},${server},${port}\n`)
+  users.push({ account, token, server, port })
 }
 dataFile.close()
 console.log(`Written to ${DATA_FILE}\n`)
@@ -59,24 +60,14 @@ if (PORT !== 7768) {
 console.log(`Creating test plan file ${MESSAGES} messages...`)
 
 const file = fs.createWriteStream(TEST_FILE)
-file.write(renderHeader(SERVER, String(PORT)))
-
-// Inject JMeter variable placeholders into the hex encoded data
-const dummyUsername = 'X'.padEnd(USERNAME_SIZE, 'X')
-const dummyUsernameHex = Buffer.from(dummyUsername, 'utf8').toString('hex')
-const dummyToken = 'T'.padEnd(TOKEN_SIZE, 'T')
-const dummyTokenHex = Buffer.from(dummyToken, 'utf8').toString('hex')
-const [request, response] = createAuthExchange(1, dummyUsername, dummyToken)
-const requestWithJmeterVars = request.toString('hex')
-  .replace(dummyUsernameHex, '${ACCOUNT_HEX}')
-  .replace(dummyTokenHex, '${TOKEN}')
-
-file.write(renderAuth(requestWithJmeterVars, response.toString('hex')))
+file.write(renderHeader())
 
 for (let i = 2; i <= MESSAGES; i++) {
-  const [request, response] = createSuccessfulMessageExchange(i, CONNECTOR_ADDRESS + '.' + DESTINATION_ACCOUNT,
-    '1', new Date(Date.now() + 60000 * 60)) // Expiry in an hour
-  file.write(renderPrepare(request.toString('hex'), response.toString('hex')))
+  file.write(renderSend(i, CONNECTOR_ADDRESS + '.' + DESTINATION_ACCOUNT, 1, 30000))
+}
+
+for (let i = 2; i <= MESSAGES; i++) {
+  file.write(renderReceive(i))
 }
 
 file.write(renderFooter())

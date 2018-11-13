@@ -1,4 +1,4 @@
-export function render (ilpAddress: string, receiverAddress: string, accountData: {account: string, token: string, port: number}[]) {
+export function render (ilpAddress: string, receiverAddress: string, accountData: {account: string, token: string, server: string, port: number}[]) {
 
   const accounts = {}
   accountData.map(({ account, token, port }) => {
