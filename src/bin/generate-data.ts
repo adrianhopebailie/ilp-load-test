@@ -60,7 +60,7 @@ if (PORT !== 7768) {
 console.log(`Creating test plan file ${MESSAGES} messages...`)
 
 const file = fs.createWriteStream(TEST_FILE)
-file.write(renderHeader())
+file.write(renderHeader(UNIQUE_USERS))
 
 for (let i = 2; i <= MESSAGES; i++) {
   file.write(renderSend(i, CONNECTOR_ADDRESS + '.' + DESTINATION_ACCOUNT, 1, 30000))
