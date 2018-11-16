@@ -5,14 +5,12 @@
 
 This is a companion project to JMeter which is used to execute the load tests.
  - Download JMeter from https://jmeter.apache.org
- - Download the JMeter WebSocket Samplers by Peter Doornbosch from https://bitbucket.org/pjtr/jmeter-websocket-samplers
-   - Get the latest JAR from https://bitbucket.org/pjtr/jmeter-websocket-samplers/downloads/
-   - Put it in `<jmeter-home>/lib/ext` before starting JMeter
-  - Use the scripts in this project to generate a test plan and test data
-   - Run `build/bin/generate-data.js`
-   - It will produce a file called `ilp-load-test.jmx` and `user.csv`
+ - Get the JMeter ILP Samplers from https://github.com/adrianhopebailie/jmeter-ilp-samplers
+ - Use the scripts in this project to generate a test plan and test data
+    - Run `build/bin/generate-data.js`
+    - It will produce a file called `ilp-load-test.jmx` and `users.csv`
 
-The test plan loads data from the `user.csv` file for each cycle by a thread.
+The test plan loads data from the `users.csv` file for each thread.
 
 Run the test plan using JMeter
 
